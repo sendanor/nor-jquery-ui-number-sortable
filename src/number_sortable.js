@@ -3,8 +3,11 @@
  */
 (function() {
 
+/*global window */
+
 var $     = (typeof require !== 'undefined') ? require('jquery')    : window && window.jQuery;
 var debug = (typeof require !== 'undefined') ? require('nor-debug') : window && window.debug;
+var Q     = (typeof require !== 'undefined') ? require('q')         : window && window.Q;
 
 if(typeof $ === 'undefined') {
 	throw new TypeError('jQuery required for numberSortable plugin!');
@@ -132,13 +135,13 @@ $.fn.extend({
 			debug.assert(opts.getValue).is('function');
 		}
 
-		var set_value = opts.setValue.bind(opts);
-		var get_value = opts.getValue.bind(opts);
+		var set_value = opts.setValue.bind(undefined);
+		var get_value = opts.getValue.bind(undefined);
 
 		$( element ).sortable({
 			stop: function( event, ui ) {
 				var item = ui.item;
-				var item_value = get_value( item );
+				var item_value = get_value.call( item );
 
 				var prev = $(item).prev();
 				var next = $(item).next();
@@ -146,8 +149,8 @@ $.fn.extend({
 				var prev_exists = prev.length !== 0;
 				var next_exists = next.length !== 0;
 
-				var prev_value = prev_exists ? get_value( prev ) : undefined;
-				var next_value = next_exists ? get_value( next ) : undefined;
+				var prev_value = prev_exists ? get_value.call( prev ) : undefined;
+				var next_value = next_exists ? get_value.call( next ) : undefined;
 
 				//console.log('prev exists = ', prev_exists );
 				//console.log('next exists = ', next_exists );
@@ -165,7 +168,7 @@ $.fn.extend({
 					next = $(next).next();
 					next_exists = next.length !== 0;
 
-					next_value = next_exists ? get_value( next ) : undefined;
+					next_value = next_exists ? get_value.call( next ) : undefined;
 	
 					// Let's break if there's no more items
 					if(!next_exists) {
@@ -182,21 +185,21 @@ $.fn.extend({
 				if( (!prev_exists) && next_exists ) {
 					//console.log('solution 1');
 					if(count !== 0) { throw new TypeError("count should never be anything but zero (0) at this point"); }
-					set_value(item, find_best_before(next_value) );
+					set_value.call(item, find_best_before(next_value) );
 					return;
 				}
 
 				// If direct adjacent items have a different value, we can simply select a number between these two values.
 				if( prev_exists && next_exists && (count === 0) ) {
 					//console.log('solution 2');
-					set_value(item, find_best_between(prev_value, next_value) );
+					set_value.call(item, find_best_between(prev_value, next_value) );
 					return;
 				}
 
 				// If we're at the end of the list, we can just choose bigger number than prev value.
 				if( prev_exists && (!next_exists) && (count === 0) ) {
 					//console.log('solution 3');
-					set_value(item, find_best_after(prev_value) );
+					set_value.call(item, find_best_after(prev_value) );
 					return;
 				}
 
@@ -208,10 +211,10 @@ $.fn.extend({
 
 				find_best_range(prev_value, next_exists ? next_value : undefined, count).forEach(function(value) {
 					if(item_value !== value) {
-						set_value(item, value );
+						set_value.call(item, value );
 					}
 					item = $(item).next();
-					item_value = get_value( item );
+					item_value = get_value.call( item );
 				});
 
 			}

@@ -11,13 +11,13 @@ Usage:
 $('#sortable').numberSortable({
 
 	/** Set floating point value associated with `item` for ordering it */
-	'setValue': function set_value(item, value) {
-		$(item).text( value );
+	'setValue': function set_value(value) {
+		$(this).text( value );
 	},
 
 	/** Get floating point value associated with `item` for ordering it */
-	'getValue': function get_value(item) {
-		return parseFloat( $(item).text() );
+	'getValue': function get_value() {
+		return parseFloat( $(this).text() );
 	}
 
 });
