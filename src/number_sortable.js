@@ -3,8 +3,12 @@
  */
 (function() {
 
-var $ = require('jquery');
-var debug = require('nor-debug');
+var $     = (typeof require !== 'undefined') ? require('jquery')    : window && window.jQuery;
+var debug = (typeof require !== 'undefined') ? require('nor-debug') : window && window.debug;
+
+if(typeof $ === 'undefined') {
+	throw new TypeError('jQuery required for numberSortable plugin!');
+}
 
 /** Find best number for ordering before `a` */
 function find_best_before(a) {
@@ -122,9 +126,11 @@ $.fn.extend({
 		var element = this;
 		opts = opts || {};
 
-		debug.assert(opts).is('object');
-		debug.assert(opts.setValue).is('function');
-		debug.assert(opts.getValue).is('function');
+		if(typeof debug !== 'undefined') {
+			debug.assert(opts).is('object');
+			debug.assert(opts.setValue).is('function');
+			debug.assert(opts.getValue).is('function');
+		}
 
 		var set_value = opts.setValue.bind(opts);
 		var get_value = opts.getValue.bind(opts);
