@@ -3,8 +3,11 @@
  */
 (function() {
 
+/*global window */
+
 var $     = (typeof require !== 'undefined') ? require('jquery')    : window && window.jQuery;
 var debug = (typeof require !== 'undefined') ? require('nor-debug') : window && window.debug;
+var Q     = (typeof require !== 'undefined') ? require('q')         : window && window.Q;
 
 if(typeof $ === 'undefined') {
 	throw new TypeError('jQuery required for numberSortable plugin!');
@@ -120,8 +123,56 @@ function find_best_range(a, b, c) {
 	return results;
 }
 
+/** Catch errors */
+function catch_errors(fun) {
+
+	function deal_with_error(err) {
+		console.log('ERROR: ', ( (err && err.stack) ? err.stack : err) );
+	}
+
+	// If there is no Q, let's do it synchronically.
+	try {
+		if(typeof Q === 'undefined') {
+			var x = fun();
+			if(x && (typeof x.then === 'function')) {
+				throw new TypeError('We got a promise but there is no Q enabled!');
+			}
+		} else {
+			Q.fcall(fun).fail(deal_with_error).done();
+		}
+	} catch(err) {
+		deal_with_error(err);
+	}
+
+}
+
+/** Execute multiple functions step by step
+ * @params funcs {array} The array of functions, which may or may not return Q promises.
+ */
+function join_steps(funcs) {
+
+	// First, let's check if we have Q support...
+	if(typeof Q !== 'undefined') {
+		return Q.all(funcs.map(Q.fcall));
+	}
+
+	// OK, so the hard way...
+	funcs.reduce(function(soFar, f) {
+		var ret = f();
+		if(ret && ret.then) {
+			throw new TypeError("Promise detected but no Q-support enabled!");
+		}
+	}, undefined);
+
+}
+
 /** jQuery (UI) sortable using external floating point based ordering */
 $.fn.extend({
+	/** Enable numeric sortable on an element.
+	 * @param opts {object} Options
+	 * @param opts.getValue {function} A function that should return the value of item. It will get the item as `this` element in jQuery style. This function does NOT support promises.
+	 * @param opts.setValue {function} A function that sets the value of an item. It may return asynchronic promises for the value or the value itself.
+	 */
 	'numberSortable': function number_sortable (opts) {
 		var element = this;
 		opts = opts || {};
@@ -132,13 +183,13 @@ $.fn.extend({
 			debug.assert(opts.getValue).is('function');
 		}
 
-		var set_value = opts.setValue.bind(opts);
-		var get_value = opts.getValue.bind(opts);
+		var set_value = opts.setValue;
+		var get_value = opts.getValue;
 
 		$( element ).sortable({
 			stop: function( event, ui ) {
 				var item = ui.item;
-				var item_value = get_value( item );
+				var item_value = get_value.call( item );
 
 				var prev = $(item).prev();
 				var next = $(item).next();
@@ -146,8 +197,8 @@ $.fn.extend({
 				var prev_exists = prev.length !== 0;
 				var next_exists = next.length !== 0;
 
-				var prev_value = prev_exists ? get_value( prev ) : undefined;
-				var next_value = next_exists ? get_value( next ) : undefined;
+				var prev_value = prev_exists ? get_value.call( prev ) : undefined;
+				var next_value = next_exists ? get_value.call( next ) : undefined;
 
 				//console.log('prev exists = ', prev_exists );
 				//console.log('next exists = ', next_exists );
@@ -165,7 +216,7 @@ $.fn.extend({
 					next = $(next).next();
 					next_exists = next.length !== 0;
 
-					next_value = next_exists ? get_value( next ) : undefined;
+					next_value = next_exists ? get_value.call( next ) : undefined;
 	
 					// Let's break if there's no more items
 					if(!next_exists) {
@@ -182,36 +233,42 @@ $.fn.extend({
 				if( (!prev_exists) && next_exists ) {
 					//console.log('solution 1');
 					if(count !== 0) { throw new TypeError("count should never be anything but zero (0) at this point"); }
-					set_value(item, find_best_before(next_value) );
+					catch_errors( set_value.bind(item, find_best_before(next_value) ) );
 					return;
 				}
 
 				// If direct adjacent items have a different value, we can simply select a number between these two values.
 				if( prev_exists && next_exists && (count === 0) ) {
 					//console.log('solution 2');
-					set_value(item, find_best_between(prev_value, next_value) );
+					catch_errors( set_value.bind(item, find_best_between(prev_value, next_value) ) );
 					return;
 				}
 
 				// If we're at the end of the list, we can just choose bigger number than prev value.
 				if( prev_exists && (!next_exists) && (count === 0) ) {
 					//console.log('solution 3');
-					set_value(item, find_best_after(prev_value) );
+					catch_errors( set_value.bind(item, find_best_after(prev_value) ) );
 					return;
 				}
 
-				// 
+				// Find best new range of values
 				//console.log('solution 4');
 
 				if(!prev_exists) { throw new TypeError("prev should always exist at this point"); }
 				if(count === 0) { throw new TypeError("count should never be zero (0) at this point"); }
 
+				var steps = [];
+
 				find_best_range(prev_value, next_exists ? next_value : undefined, count).forEach(function(value) {
 					if(item_value !== value) {
-						set_value(item, value );
+						steps.push(set_value.bind(item, value ));
 					}
 					item = $(item).next();
-					item_value = get_value( item );
+					item_value = get_value.call( item );
+				});
+
+				catch_errors(function() {
+					return join_steps(steps);
 				});
 
 			}
