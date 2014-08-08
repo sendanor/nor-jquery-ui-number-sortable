@@ -10,7 +10,7 @@ Usage:
 ```
 $('#sortable').numberSortable({
 
-	/** Set floating point value associated with `item` for ordering it */
+	/** Set floating point value associated with `item` for ordering it. You also may return a promise from this function. */
 	'setValue': function set_value(value) {
 		$(this).text( value );
 	},
