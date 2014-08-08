@@ -3,7 +3,7 @@ nor-jquery-ui-number-sortable
 
 Floating point based sortable implementation as a jQuery UI module
 
-See live example [test.html](http://sendanor.github.io/nor-jquery-ui-number-sortable/examples/test.html).
+See live example [test.html](http://sendanor.github.io/nor-jquery-ui-number-sortable/examples/sync/test.html).
 
 Usage:
 
