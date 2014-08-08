@@ -166,7 +166,7 @@ $.fn.extend({
 						break;
 					}
 	
-				};
+				}
 
 				//console.log('count = ', count );
 				//console.log('prev value = ', prev_value );
@@ -219,5 +219,5 @@ if(typeof module !== 'undefined') {
 	module.exports = $.fn.numberSortable;
 }
 
-})();
+}());
 /* EOF */
