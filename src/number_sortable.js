@@ -204,8 +204,8 @@ $.fn.extend({
 			var item = ui.item;
 			var item_value = get_value.call( item );
 
-			var prev = $(item).prev();
-			var next = $(item).next();
+			var prev = $(item).prev(sortable_opts.items);
+			var next = $(item).next(sortable_opts.items);
 
 			var prev_exists = prev.length !== 0;
 			var next_exists = next.length !== 0;
@@ -226,7 +226,7 @@ $.fn.extend({
 
 				count += 1;
 
-				next = $(next).next();
+				next = $(next).next(sortable_opts.items);
 				next_exists = next.length !== 0;
 
 				next_value = next_exists ? get_value.call( next ) : undefined;
@@ -276,7 +276,7 @@ $.fn.extend({
 				if(item_value !== value) {
 					steps.push(set_value.bind(item, value ));
 				}
-				item = $(item).next();
+				item = $(item).next(sortable_opts.items);
 				item_value = get_value.call( item );
 			});
 
