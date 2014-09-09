@@ -1,6 +1,6 @@
 {
   "name": "nor-jquery-ui-number-sortable",
-  "version": "0.2.2",
+  "version": "0.2.3",
   "description": "Floating point based sortable implementation as a jQuery UI module",
   "main": "src/number_sortable.js",
   "scripts": {
@@ -26,6 +26,6 @@
   },
   "peerDependencies": {
     "jquery":               ">= 1.11.1  < 2.0.0",
-	"jquery-ui":            ">= 1.11.0  < 1.12.0"
+    "jquery-ui":            ">= 1.11.0  < 1.12.0"
   }
 }
