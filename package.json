@@ -1,11 +1,12 @@
 {
   "name": "nor-jquery-ui-number-sortable",
-  "version": "0.2.3",
+  "version": "0.2.4",
   "description": "Floating point based sortable implementation as a jQuery UI module",
   "main": "src/number_sortable.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "lint": "node-lint src/ --config=lint.json"
+    "lint": "node-lint src/ --config=lint.json",
+    "jshint": "jshint src/"
   },
   "repository": {
     "type": "git",
@@ -18,7 +19,8 @@
   },
   "homepage": "https://github.com/sendanor/nor-jquery-ui-number-sortable",
   "devDependencies": {
-    "lint": "*"
+    "lint": "*",
+    "jshint" : "*"
   },
   "optionalDependencies": {
     "q":                    ">= 1.0.1   < 1.1.0",

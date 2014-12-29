@@ -5,15 +5,19 @@
 
 /*global window */
 
-var $     = (typeof require !== 'undefined') ? require('jquery')    : window && window.jQuery;
-var debug = (typeof require !== 'undefined') ? require('nor-debug') : window && window.debug;
-var Q     = (typeof require !== 'undefined') ? require('q')         : window && window.Q;
+var has_require = typeof require !== 'undefined';
+
+var $        = has_require ? require('jquery')       : window && window.jQuery;
+var debug    = has_require ? require('nor-debug')    : window && window.debug;
+var Q        = has_require ? require('q')            : window && window.Q;
+var ARRAY    = has_require ? require('nor-array')    : window && window.ARRAY;
+var FUNCTION = has_require ? require('nor-function') : window && window.FUNCTION;
 
 if(typeof $ === 'undefined') {
 	throw new TypeError('jQuery required for numberSortable plugin!');
 }
 
-if(typeof require !== 'undefined') {
+if(has_require) {
 	require('jquery-ui');
 }
 
@@ -131,7 +135,7 @@ function find_best_range(a, b, c) {
 function catch_errors(fun) {
 
 	function deal_with_error(err) {
-		console.log('ERROR: ', ( (err && err.stack) ? err.stack : err) );
+		debug.error('ERROR: ', ( (err && err.stack) ? err.stack : err) );
 	}
 
 	// If there is no Q, let's do it synchronically.
@@ -157,11 +161,11 @@ function join_steps(funcs) {
 
 	// First, let's check if we have Q support...
 	if(typeof Q !== 'undefined') {
-		return Q.all(funcs.map(Q.fcall));
+		return Q.all(ARRAY(funcs).map(Q.fcall).valueOf());
 	}
 
 	// OK, so the hard way...
-	funcs.reduce(function(soFar, f) {
+	ARRAY(funcs).reduce(function(soFar, f) {
 		var ret = f();
 		if(ret && ret.then) {
 			throw new TypeError("Promise detected but no Q-support enabled!");
@@ -193,7 +197,7 @@ $.fn.extend({
 
 		var sortable_opts = {};
 
-		Object.keys(opts).filter(function(key) {
+		ARRAY(Object.keys(opts)).filter(function(key) {
 			return (key !== 'setValue') && (key !== 'getValue') && (key !== 'stop');
 		}).forEach(function(key) {
 			sortable_opts[key] = opts[key];
@@ -230,37 +234,37 @@ $.fn.extend({
 				next_exists = next.length !== 0;
 
 				next_value = next_exists ? get_value.call( next ) : undefined;
-	
+
 				// Let's break if there's no more items
 				if(!next_exists) {
 					break;
 				}
-	
+
 			}
 
 			//console.log('count = ', count );
 			//console.log('prev value = ', prev_value );
 			//console.log('next value = ', next_value );
-	
+
 			// If we're at the begin of the list, we can just choose smaller number than next value.
 			if( (!prev_exists) && next_exists ) {
 				//console.log('solution 1');
 				if(count !== 0) { throw new TypeError("count should never be anything but zero (0) at this point"); }
-				catch_errors( set_value.bind(item, find_best_before(next_value) ) );
+				catch_errors( FUNCTION(set_value).bind(item, find_best_before(next_value) ) );
 				return;
 			}
 
 			// If direct adjacent items have a different value, we can simply select a number between these two values.
 			if( prev_exists && next_exists && (count === 0) ) {
 				//console.log('solution 2');
-				catch_errors( set_value.bind(item, find_best_between(prev_value, next_value) ) );
+				catch_errors( FUNCTION(set_value).bind(item, find_best_between(prev_value, next_value) ) );
 				return;
 			}
 
 			// If we're at the end of the list, we can just choose bigger number than prev value.
 			if( prev_exists && (!next_exists) && (count === 0) ) {
 				//console.log('solution 3');
-				catch_errors( set_value.bind(item, find_best_after(prev_value) ) );
+				catch_errors( FUNCTION(set_value).bind(item, find_best_after(prev_value) ) );
 				return;
 			}
 
@@ -272,9 +276,9 @@ $.fn.extend({
 
 			var steps = [];
 
-			find_best_range(prev_value, next_exists ? next_value : undefined, count).forEach(function(value) {
+			ARRAY(find_best_range(prev_value, next_exists ? next_value : undefined, count)).forEach(function(value) {
 				if(item_value !== value) {
-					steps.push(set_value.bind(item, value ));
+					steps.push( FUNCTION(set_value).bind(item, value ));
 				}
 				item = $(item).next(sortable_opts.items);
 				item_value = get_value.call( item );
